@@ -1,0 +1,94 @@
+{
+  "name": "Signal",
+  "description": "Laravel community feedback board \u2014 a working Simplifyd Cloud sample.",
+  "services": [
+    {
+      "key": "db",
+      "name": "Signal database",
+      "type": "postgres",
+      "vcpus": 1,
+      "memory": 1024,
+      "postgres": {
+        "storage_gb": 5
+      }
+    },
+    {
+      "key": "web",
+      "name": "Signal",
+      "type": "docker",
+      "vcpus": 1,
+      "memory": 512,
+      "docker": {
+        "image": "ghcr.io/simplifydcloud/sample-laravel-signal",
+        "tag": "1.0.0",
+        "release_command": [
+          "php",
+          "artisan",
+          "migrate",
+          "--seed",
+          "--force"
+        ]
+      },
+      "ingress": [
+        {
+          "port": 8080,
+          "protocol": "HTTP"
+        }
+      ],
+      "readiness_probe": {
+        "path": "/ready",
+        "port": 8080,
+        "period_seconds": 5,
+        "timeout_seconds": 3,
+        "failure_threshold": 6,
+        "success_threshold": 1
+      },
+      "variables": [
+        {
+          "name": "APP_NAME",
+          "value": "Signal"
+        },
+        {
+          "name": "APP_ENV",
+          "value": "production"
+        },
+        {
+          "name": "APP_DEBUG",
+          "value": "false"
+        },
+        {
+          "name": "APP_KEY",
+          "value": "${{secret(32)}}"
+        },
+        {
+          "name": "APP_URL",
+          "value": "${{SIMPLIFYD_PUBLIC_URL}}"
+        },
+        {
+          "name": "DB_CONNECTION",
+          "value": "pgsql"
+        },
+        {
+          "name": "DB_URL",
+          "value": "${{db.DATABASE_URL}}"
+        },
+        {
+          "name": "SESSION_DRIVER",
+          "value": "database"
+        },
+        {
+          "name": "CACHE_STORE",
+          "value": "database"
+        },
+        {
+          "name": "QUEUE_CONNECTION",
+          "value": "sync"
+        },
+        {
+          "name": "LOG_CHANNEL",
+          "value": "stderr"
+        }
+      ]
+    }
+  ]
+}
