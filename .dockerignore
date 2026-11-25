@@ -1,0 +1,12 @@
+.git
+.env
+.env.*
+vendor
+node_modules
+storage/logs/*
+storage/framework/views/*
+bootstrap/cache/*.php
+database/*.sqlite*
+playwright-report
+test-results
+docs

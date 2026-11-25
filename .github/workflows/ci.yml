@@ -1,0 +1,42 @@
+name: CI
+on: [push, pull_request, workflow_dispatch]
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        database: [sqlite, pgsql]
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_USER: signal
+          POSTGRES_PASSWORD: signal-test
+          POSTGRES_DB: signal_test
+        ports: ["5432:5432"]
+        options: --health-cmd="pg_isready -U signal -d signal_test" --health-interval=5s --health-timeout=5s --health-retries=10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          extensions: mbstring, pdo_sqlite, pdo_pgsql
+          coverage: none
+      - run: composer install --no-interaction --prefer-dist
+      - run: cp .env.example .env && php artisan key:generate
+      - run: vendor/bin/pint --test
+      - run: php artisan test
+        env:
+          DB_CONNECTION: ${{ matrix.database }}
+          DB_DATABASE: ${{ matrix.database == 'sqlite' && ':memory:' || 'signal_test' }}
+          DB_HOST: 127.0.0.1
+          DB_PORT: 5432
+          DB_USERNAME: signal
+          DB_PASSWORD: signal-test
+  container:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: docker build -t signal:test .
